@@ -300,7 +300,7 @@ def analyze_bias(company: str, jd_text: str = "") -> Dict:
 
     green_flags.extend(jd_result["inclusive_signals"])
     green_flags.extend(company_rep["positive"][:3])
-    if company_rep["pay_equity"]:
+    if company_rep["pay_equity"] and company_rep.get("dei_score", 50) >= 75 and len(company_rep.get("positive", [])) >= 2:
         green_flags.append(f"Pay equity data: {company_rep['pay_equity'][:50]}")
 
     return {

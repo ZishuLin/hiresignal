@@ -199,8 +199,10 @@ def predict_layoff_risk(company: str) -> Dict:
         if len(dept.split()) <= 4 and "Post" not in dept and "List" not in dept and "Article" not in dept:
             red_flags.append(f"Executive departure: {dept[:60]}")
 
+    company_lower = company.lower()
     for s in news["low_risk_signals"][:3]:
-        green_flags.append(s)
+        if company_lower in s.lower():
+            green_flags.append(s)
     if glassdoor["avg_rating"] and glassdoor["avg_rating"] >= 4.0:
         green_flags.append(f"Strong Glassdoor rating: {glassdoor['avg_rating']}/5")
     if not layoffs["has_history"]:
