@@ -161,11 +161,14 @@ def _analyze_company_reputation(company: str) -> Dict:
         signals["positive"].append(f"✓ {a['title']}")
         signals["dei_score"] += 5
 
-    # Direct discrimination search
+    # Direct discrimination search — must mention company specifically
+    company_lower = company.lower()
     results = _serpapi_search(f"{company} discrimination lawsuit diversity bias 2023 2024 2025", num=6)
     for r in results:
-        text = (r.get("title", "") + " " + r.get("snippet", "")).lower()
         title = r.get("title", "")[:70]
+        text = (title + " " + r.get("snippet", "")).lower()
+        if company_lower not in text:
+            continue  # skip generic articles
         if any(w in text for w in ["discrimination", "lawsuit", "bias complaint", "hostile", "harassment"]):
             signals["negative"].append(f"⚠ {title}")
             signals["dei_score"] -= 12
@@ -182,8 +185,10 @@ def _analyze_company_reputation(company: str) -> Dict:
     # Pay gap search
     results2 = _serpapi_search(f"{company} pay equity gender pay gap salary transparency", num=4)
     for r in results2:
-        text = (r.get("title", "") + " " + r.get("snippet", "")).lower()
         title = r.get("title", "")[:70]
+        text = (title + " " + r.get("snippet", "")).lower()
+        if company_lower not in text:
+            continue  # skip generic articles
         if "pay equity" in text or "salary transparency" in text:
             signals["pay_equity"] = signals["pay_equity"] or title
             signals["dei_score"] += 5

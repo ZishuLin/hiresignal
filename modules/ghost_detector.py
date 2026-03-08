@@ -125,13 +125,18 @@ def _score_company_signals(company: str) -> Dict:
     score = 15  # default neutral
 
     results = _serpapi_search(f"{company} layoffs hiring freeze 2024 2025", num=5)
+    company_lower = company.lower()
     for r in results:
-        text = (r.get("title", "") + " " + r.get("snippet", "")).lower()
+        title = r.get("title", "")
+        text = (title + " " + r.get("snippet", "")).lower()
+        # Only count if article is specifically about this company
+        if company_lower not in text:
+            continue
         if any(w in text for w in ["layoff", "hiring freeze", "pause hiring", "cutting jobs", "reduce workforce"]):
-            signals.append(f"⚠ Recent news: {r.get('title', '')[:60]}")
+            signals.append(f"⚠ Recent news: {title[:60]}")
             score -= 5
         if any(w in text for w in ["hiring", "expanding", "growing team", "new roles"]):
-            signals.append(f"✓ Active hiring: {r.get('title', '')[:60]}")
+            signals.append(f"✓ Active hiring: {title[:60]}")
             score += 3
 
     score = max(0, min(30, score))

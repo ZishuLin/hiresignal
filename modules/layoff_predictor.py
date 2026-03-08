@@ -184,16 +184,20 @@ def predict_layoff_risk(company: str) -> Dict:
         recency = layoffs.get("recency", "")
         label = f" ({recency.replace('_', ' ')})" if recency != "none" else ""
         red_flags.append(f"Found {len(layoffs['layoff_events'])} layoff event(s){label}")
+    company_lower = company.lower()
     for s in news["high_risk_signals"][:3]:
-        red_flags.append(s)
+        if company_lower in s.lower():
+            red_flags.append(s)
     for s in news["medium_risk_signals"][:2]:
-        red_flags.append(f"⚠ {s}")
+        if company_lower in s.lower():
+            red_flags.append(f"⚠ {s}")
     if glassdoor["avg_rating"] and glassdoor["avg_rating"] < 3.5:
         red_flags.append(f"Low Glassdoor rating: {glassdoor['avg_rating']}/5")
-    if linkedin.get("exodus_risk") == "high":
+    if linkedin.get("exodus_risk") == "high" and layoffs.get("has_history"):
         red_flags.append("High employee exodus detected on LinkedIn")
     for dept in linkedin.get("executive_departures", [])[:2]:
-        red_flags.append(f"Executive departure: {dept[:60]}")
+        if len(dept.split()) <= 4 and "Post" not in dept and "List" not in dept and "Article" not in dept:
+            red_flags.append(f"Executive departure: {dept[:60]}")
 
     for s in news["low_risk_signals"][:3]:
         green_flags.append(s)

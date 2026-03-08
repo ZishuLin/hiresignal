@@ -191,15 +191,19 @@ def get_employee_exodus_signals(company: str) -> Dict:
     news_results = _serpapi_search(
         f"{company} employees leaving high turnover attrition 2024 2025", num=5
     )
+    company_lower = company.lower()
     for r in news_results:
-        text = (r.get("title", "") + " " + r.get("snippet", "")).lower()
-        if any(w in text for w in ["exodus", "mass departure", "high turnover", "attrition", "brain drain"]):
-            signals.append(r.get("title", "")[:70])
+        title = r.get("title", "")
+        text = (title + " " + r.get("snippet", "")).lower()
+        # Only count if the article is specifically about this company
+        if company_lower in text and any(w in text for w in ["exodus", "mass departure", "high turnover", "attrition", "brain drain"]):
+            signals.append(title[:70])
 
+    # Need strong evidence before flagging exodus risk
     exodus_risk = "low"
-    if departures > arrivals * 1.5 or executive_departures:
+    if (departures >= 3 and departures > arrivals * 2) or len(executive_departures) >= 3:
         exodus_risk = "high"
-    elif departures > arrivals:
+    elif departures >= 2 and departures > arrivals:
         exodus_risk = "medium"
 
     return {
